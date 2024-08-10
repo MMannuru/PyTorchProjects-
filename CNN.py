@@ -13,22 +13,22 @@ train = pd.read_csv(r"/Users/mokshith/Downloads/DigitRecognizer/train.csv", dtyp
 
 #splitting data into targets and features
 targets_numpy = train.label.values
-features_numpy = train.loc[:, train.columns != "labels"].values/255
+features_numpy = train.loc[:, train.columns != "label"].values/255
 
 #splitting into training sets and testing sets
-features_Train, features_Test, targets_Train, targets_Test = train_test_split(
-    features_numpy, targets_numpy, train_size=0.8, random_state=42)
+features_train, features_test, targets_train, targets_test = train_test_split(
+    features_numpy, targets_numpy, test_size=0.2, random_state=42)
 
 #creating tensors
 #tensors can be moved to a GPU, numpy arrows cannot
 #labels for classification tasks need to be LongTensor
 #the target labels need to be in the form of integer indices
 #this is what the models loss function expects as well
-featuresTrain = torch.tensor(features_Train)
-targetsTrain = torch.tensor(targets_Train).type(torch.LongTensor)
+featuresTrain = torch.tensor(features_train)
+targetsTrain = torch.tensor(targets_train).type(torch.LongTensor)
 
-featuresTest = torch.tensor(features_Test)
-targetsTest = torch.tensor(targets_Test).type(torch.LongTensor)
+featuresTest = torch.tensor(features_test)
+targetsTest = torch.tensor(targets_test).type(torch.LongTensor)
 
 class ConvolutionalNeuralNetwork(nn.Module):
     def __init__(self):
@@ -42,7 +42,7 @@ class ConvolutionalNeuralNetwork(nn.Module):
         #kernel_size = 5 for a 5x5 filter
         #stride = 2 means filter moves 2 pixels
         #padding = 0 means no padding, filter only applies where it fits
-        self.cnn1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size = 5, stride = 2, padding = 0)
+        self.cnn1 = nn.Conv2d(in_channels=1, out_channels=16, kernel_size = 5, stride = 1, padding = 0)
         #relu activation function!!! this is for non-linearity so model can learn complex patterns
         self.relu1 = nn.ReLU()
         #pooling! we use maxpooling to downsample the image
@@ -93,7 +93,7 @@ class ConvolutionalNeuralNetwork(nn.Module):
         #fully connected layer
         #flattening image
         final_output = second_conv_output.view(second_conv_output.size(0), -1)
-        final_output = self.fc1(second_conv_output)
+        final_output = self.fc1(final_output)
 
         return final_output
 
@@ -101,7 +101,7 @@ class ConvolutionalNeuralNetwork(nn.Module):
 batch_size = 100
 n_iters = 10000
 #mini-batches per epoch = (total samples)/ (batch size)
-num_mini_batches = (len(features_Train) / batch_size)
+num_mini_batches = (len(features_train) / batch_size)
 #number of epochs = (total iterations) / (mini-batches)
 num_epochs = n_iters/ num_mini_batches
 num_epochs = int(num_epochs)
@@ -168,9 +168,11 @@ for epoch in range(num_epochs):
             accuracy = 100 * correct / float(total)
 
             #storing loss and iteration
-            loss_list.append(loss.data)
+            loss_list.append(loss_value.data)
             iteration_list.append(count)
         if count % 500 == 0:
             #printing loss
             print('Iteration: {}  Loss: {}  Accuracy: {}%'.format(count, loss_value.data, accuracy))
+
+
 
